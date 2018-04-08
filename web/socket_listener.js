@@ -85,6 +85,7 @@ class SocketListener {
 
 /**
  * Class that connects to WebSocket and awaits state change messages.
+ * Also stores state locally so the server isn't always needed.
  * @param: url: string A complete websocket url.
  * @param: stateChangeCallback: a callback which will be passed the state object when state changes.
  *   "closed" is passed when the connection is closed. On initial connect a state will be passed.
@@ -94,7 +95,9 @@ class StateListener {
 	constructor(url, stateChangeCallback) {
 		this.url = url;
 		this.stateChangeCallback = stateChangeCallback
-		this.state = {};
+		this.stateStorageKey = "elitelog-webapi-js-state";
+		this.retrieveState();
+		this.doCallback();
 	}
 
 	run() {
@@ -113,21 +116,33 @@ class StateListener {
 			var json = JSON.parse(event.data)
 			switch (json.event) {
 				case "state":
-					this.handleStateUpdate(json.data)
+					this.handleStateUpdate(json.data);
 					break;
 			}
 		} else if (type === "close") {
-			handleStateUpdate("closed");
+			this.handleStateUpdate("closed");
 		}
+		this.storeState();
 	}
 
 	handleStateUpdate(state) {
 		this.state = state;
+		this.doCallback();
+	}
 
+	doCallback() {
 		if (typeof this.stateChangeCallback !== "undefined") {
-			this.stateChangeCallback(state);
+			this.stateChangeCallback(this.state);
 		} else {
-			console.info ("No State change callback is defined. State update:", state);
+			console.info ("No State change callback is defined. State update:", this.state);
 		}
+	}
+
+	storeState() {
+		localStorage.setItem(this.stateStorageKey, JSON.stringify(this.state));
+	}
+
+	retrieveState() {
+		this.state = JSON.parse(localStorage.getItem(this.stateStorageKey)) || {};
 	}
 }
