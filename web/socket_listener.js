@@ -8,28 +8,9 @@
  * s.run();
  */
 
-// https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
-String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
-function () {
-  "use strict";
-  var str = this.toString();
-  if (arguments.length) {
-    var t = typeof arguments[0];
-    var key;
-    var args = ("string" === t || "number" === t)
-      ? Array.prototype.slice.call(arguments)
-      : arguments[0];
-
-    for (key in args) {
-      str = str.replace(new RegExp("\\{" + key + "\\}", "gi"), args[key]);
-    }
-  }
-
-  return str;
-};
-
 /**
  * Listen to websocket on url with set callbacks.
+ * @requires https://raw.githubusercontent.com/ArmEagle/userscripts/master/util/formatunicorn.js
  */
 class SocketListener {
   /**
@@ -109,13 +90,13 @@ class SocketListener {
  *         "closed" is passed when the connection is closed. On initial connect a state will be passed.
  */
 class StateListener {
-  
+
   constructor(url, stateChangeCallback) {
     this.url = url;
     this.stateChangeCallback = stateChangeCallback
     this.state = {};
   }
-  
+
   run() {
     this.s = new SocketListener(
       this.url, {
@@ -125,7 +106,7 @@ class StateListener {
       }
     );
   }
-  
+
   genericEventListener(type, event) {
 //     console.debug("logging generic event:", type, event);
     if (type === "message" && event.type === "message") {
@@ -139,10 +120,10 @@ class StateListener {
       handleStateUpdate("closed");
     }
   }
-  
+
   handleStateUpdate(state) {
     this.state = state;
-    
+
     if (typeof this.stateChangeCallback !== "undefined") {
       this.stateChangeCallback(state);
     } else {
